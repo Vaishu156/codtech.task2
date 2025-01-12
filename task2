@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Quiz Application</title>
+  <link rel="stylesheet" href="2styles.css">
+</head>
+<body>
+  <div class="quiz-container">
+    <header>
+      <h1>Interactive Quiz</h1>
+    </header>
+    <main id="quiz">
+      <!-- Questions will be dynamically inserted here -->
+    </main>
+    <footer>
+      <button id="prev-btn">Previous</button>
+      <button id="next-btn">Next</button>
+      <button id="submit-btn" style="display: none;">Submit</button>
+    </footer>
+  </div>
+  <script src="2script.js"></script>
+</body>
+</html>
+//css
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  background: #f4f4f9;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.quiz-container {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+}
+
+header h1 {
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+}
+
+#quiz {
+  margin-bottom: 1.5rem;
+}
+
+.question {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.options {
+  list-style: none;
+  padding: 0;
+}
+
+.options li {
+  margin-bottom: 1rem;
+}
+
+.options input {
+  margin-right: 10px;
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+}
+
+button {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+//js
+// Quiz Data
+const quizData = [
+  {
+    question: "What is the capital of France?",
+    options: ["Berlin", "Madrid", "Paris", "Lisbon"],
+    correct: 2 // Index of the correct answer (Paris)
+  },
+  {
+    question: "Which programming language is used for web development?",
+    options: ["Python", "JavaScript", "C++", "Java"],
+    correct: 1 // Index of the correct answer (JavaScript)
+  },
+  {
+    question: "What is the largest planet in our solar system?",
+    options: ["Earth", "Mars", "Jupiter", "Saturn"],
+    correct: 2 // Index of the correct answer (Jupiter)
+  }
+];
+
+// DOM Elements
+const quizContainer = document.getElementById("quiz");
+const prevButton = document.getElementById("prev-btn");
+const nextButton = document.getElementById("next-btn");
+const submitButton = document.getElementById("submit-btn");
+
+// Variables
+let currentQuestionIndex = 0;
+let score = 0;
+const userAnswers = [];
+
+// Initialize Quiz
+function loadQuestion(index) {
+  const currentQuestion = quizData[index];
+  quizContainer.innerHTML = `
+    <div class="question">${currentQuestion.question}</div>
+    <ul class="options">
+      ${currentQuestion.options
+        .map(
+          (option, i) =>
+            `<li>
+              <label>
+                <input type="radio" name="answer" value="${i}">
+                ${option}
+              </label>
+            </li>`
+        )
+        .join("")}
+    </ul>
+  `;
+
+  // Preselect user's answer if they already selected one
+  if (userAnswers[index] !== undefined) {
+    const options = document.getElementsByName("answer");
+    options[userAnswers[index]].checked = true;
+  }
+
+  updateButtons();
+}
+
+// Update Button Visibility
+function updateButtons() {
+  prevButton.style.display = currentQuestionIndex > 0 ? "inline-block" : "none";
+  nextButton.style.display =
+    currentQuestionIndex < quizData.length - 1 ? "inline-block" : "none";
+  submitButton.style.display =
+    currentQuestionIndex === quizData.length - 1 ? "inline-block" : "none";
+}
+
+// Handle Navigation
+function navigateQuestion(direction) {
+  saveAnswer();
+  currentQuestionIndex += direction;
+  loadQuestion(currentQuestionIndex);
+}
+
+// Save User Answer
+function saveAnswer() {
+  const selectedOption = document.querySelector(
+    'input[name="answer"]:checked'
+  );
+  if (selectedOption) {
+    userAnswers[currentQuestionIndex] = parseInt(selectedOption.value);
+  }
+}
+
+// Handle Submit
+function submitQuiz() {
+  saveAnswer();
+  score = userAnswers.reduce((acc, answer, index) => {
+    return answer === quizData[index].correct ? acc + 1 : acc;
+  }, 0);
+
+  quizContainer.innerHTML = `
+    <div class="question">You scored ${score} out of ${quizData.length}!</div>
+  `;
+  prevButton.style.display = "none";
+  nextButton.style.display = "none";
+  submitButton.style.display = "none";
+}
+
+// Event Listeners
+prevButton.addEventListener("click", () => navigateQuestion(-1));
+nextButton.addEventListener("click", () => navigateQuestion(1));
+submitButton.addEventListener("click", submitQuiz);
+
+// Load the first question
+loadQuestion(currentQuestionIndex);
